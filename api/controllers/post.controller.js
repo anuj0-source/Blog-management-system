@@ -1,20 +1,24 @@
 import Post from "../models/post.model.js";
 import { errorHandler } from "../utils/error.js";
 
+// CREATE POST
 export const create = async (req, res, next) => {
   if (!req.body.title || !req.body.content) {
     return next(errorHandler(400, "Please provide all required fields"));
   }
+
   const slug = req.body.title
     .split(" ")
     .join("-")
     .toLowerCase()
     .replace(/[^a-zA-Z0-9-]/g, "");
+
   const newPost = new Post({
     ...req.body,
     slug,
     userId: req.user.id,
   });
+
   try {
     const savedPost = await newPost.save();
     res.status(201).json(savedPost);
@@ -23,13 +27,14 @@ export const create = async (req, res, next) => {
   }
 };
 
+// GET POSTS
 export const getposts = async (req, res, next) => {
   try {
     const startIndex = parseInt(req.query.startIndex) || 0;
     const limit = parseInt(req.query.limit) || 9;
     const sortDirection = req.query.order === "asc" ? 1 : -1;
-    const posts = await Post.find({
-      ...(req.query.userId && { userId: req.query.userId }),
+
+    const filters = {
       ...(req.query.category && { category: req.query.category }),
       ...(req.query.slug && { slug: req.query.slug }),
       ...(req.query.postId && { _id: req.query.postId }),
@@ -39,15 +44,21 @@ export const getposts = async (req, res, next) => {
           { content: { $regex: req.query.searchTerm, $options: "i" } },
         ],
       }),
-    })
+    };
+
+    // Only apply userId filter if user is NOT admin
+    if (!req.user?.isAdmin) {
+      filters.userId = req.user.id;
+    }
+
+    const posts = await Post.find(filters)
       .sort({ updatedAt: sortDirection })
       .skip(startIndex)
       .limit(limit);
 
-    const totalPosts = await Post.countDocuments();
+    const totalPosts = await Post.countDocuments(filters);
 
     const now = new Date();
-
     const oneMonthAgo = new Date(
       now.getFullYear(),
       now.getMonth() - 1,
@@ -55,6 +66,7 @@ export const getposts = async (req, res, next) => {
     );
 
     const lastMonthPosts = await Post.countDocuments({
+      ...filters,
       createdAt: { $gte: oneMonthAgo },
     });
 
@@ -68,11 +80,18 @@ export const getposts = async (req, res, next) => {
   }
 };
 
+// DELETE POST
 export const deletepost = async (req, res, next) => {
-  if (!req.user.isAdmin || req.user.id !== req.params.userId) {
-    return next(errorHandler(403, "You are not allowed to delete this post"));
-  }
   try {
+    const post = await Post.findById(req.params.postId);
+    if (!post) {
+      return next(errorHandler(404, "Post not found"));
+    }
+
+    if (post.userId.toString() !== req.user.id && !req.user.isAdmin) {
+      return next(errorHandler(403, "You are not allowed to delete this post"));
+    }
+
     await Post.findByIdAndDelete(req.params.postId);
     res.status(200).json("The post has been deleted");
   } catch (error) {
@@ -80,11 +99,18 @@ export const deletepost = async (req, res, next) => {
   }
 };
 
+// UPDATE POST
 export const updatepost = async (req, res, next) => {
-  if (!req.user.isAdmin || req.user.id !== req.params.userId) {
-    return next(errorHandler(403, "You are not allowed to update this post"));
-  }
   try {
+    const post = await Post.findById(req.params.postId);
+    if (!post) {
+      return next(errorHandler(404, "Post not found"));
+    }
+
+    if (post.userId.toString() !== req.user.id && !req.user.isAdmin) {
+      return next(errorHandler(403, "You are not allowed to update this post"));
+    }
+
     const updatedPost = await Post.findByIdAndUpdate(
       req.params.postId,
       {
@@ -97,6 +123,7 @@ export const updatepost = async (req, res, next) => {
       },
       { new: true }
     );
+
     res.status(200).json(updatedPost);
   } catch (error) {
     next(error);
