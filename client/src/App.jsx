@@ -14,7 +14,7 @@ import PostPage from "./pages/PostPage";
 import ScrollToTop from "./components/ScrollToTop";
 import Search from "./pages/Search";
 import UserPosts from "./pages/UserPosts";
-
+import AdminPosts from "./pages/AdminPosts";
 export default function App() {
   return (
     <BrowserRouter>
@@ -35,6 +35,7 @@ export default function App() {
           <Route path="/dashboard/posts" element={<UserPosts />} />
           <Route path="/create-post" element={<CreatePost />} />
           <Route path="/update-post/:postId" element={<UpdatePost />} />
+          <Route path="/admin/posts" element={<AdminPosts />} />
         </Route>
 
         {/* Admin-Only Routes */}

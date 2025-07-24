@@ -27,7 +27,7 @@ export const create = async (req, res, next) => {
   }
 };
 
-// GET POSTS (Updated)
+// GET POSTS (All or filtered or by user or admin)
 export const getposts = async (req, res, next) => {
   try {
     const startIndex = parseInt(req.query.startIndex) || 0;
@@ -46,14 +46,9 @@ export const getposts = async (req, res, next) => {
       }),
     };
 
-    // Show only current user's posts if userOnly=true
-    if (req.query.userOnly === "true") {
-      if (!req.user) {
-        return next(
-          errorHandler(401, "Unauthorized: Please login to view your posts.")
-        );
-      }
-      filters.userId = req.user.id;
+    // For filtering 'My Posts' or admin fetching user posts
+    if (req.query.userId) {
+      filters.userId = req.query.userId;
     }
 
     const posts = await Post.find(filters)

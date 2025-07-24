@@ -6,11 +6,11 @@ import {
   getposts,
   updatepost,
 } from "../controllers/post.controller.js";
-
+import { optionalVerifyToken } from "../middleware/verifyUsers.js";
 const router = express.Router();
 
 router.post("/create", verifyToken, create);
-router.get("/getposts", verifyToken, getposts); // ✅ Add verifyToken here
+router.get("/getposts", optionalVerifyToken, getposts);
 router.delete("/deletepost/:postId/:userId", verifyToken, deletepost);
 router.put("/updatepost/:postId/:userId", verifyToken, updatepost);
 
