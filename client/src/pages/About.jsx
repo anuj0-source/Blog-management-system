@@ -12,7 +12,7 @@ export default function About() {
             <p>
               Welcome to CodeVerse-Blog! This blog was created by Anuj kumar singh
               as a personal project to share his thoughts and ideas with the
-              world. Sahand is a passionate developer who loves to write about
+              world.Anuj is a passionate developer who loves to write about
               technology, coding, and everything in between.
             </p>
 
