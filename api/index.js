@@ -11,7 +11,6 @@ import commentRoutes from "./routes/comment.route.js";
 import uploadRoute from "./routes/upload.route.js"; // ✅ Correct and single import
 
 dotenv.config({ path: path.resolve("./api/.env") });
-console.log("Cloudinary Key:", process.env.CLOUDINARY_API_KEY);
 
 mongoose
   .connect(process.env.MONGO)
